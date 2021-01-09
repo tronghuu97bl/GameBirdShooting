@@ -1,7 +1,6 @@
 package com.tth.gamebirdshooting.Game;
 
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 
@@ -16,14 +15,16 @@ public class BirdManager implements GameInterface, ObstacleCallback {
     private GameManagerCallback callback;
     private Resources resources;
     private int speed, sum = 0; //toc do tao bird moi
+    private String man;
 
-    public BirdManager(Resources resources, int screenHeight, int screenWidth, GameManagerCallback callback) {
+    public BirdManager(Resources resources, int screenHeight, int screenWidth, GameManagerCallback callback, String man) {
         this.resources = resources;
         this.screenHeight = screenHeight;
         this.screenWidth = screenWidth;
         this.callback = callback;
+        this.man = man;
         speed = 0;
-        listBird.add(new Bird(resources, screenHeight, screenWidth, this));
+        listBird.add(new Bird(resources, screenHeight, screenWidth, this, man));
         sum++;
     }
 
@@ -33,7 +34,7 @@ public class BirdManager implements GameInterface, ObstacleCallback {
         if (speed >= 15) {
             speed = 0;
             if (listBird.size() < 6 && sum < 68) {
-                listBird.add(new Bird(resources, screenHeight, screenWidth, this));
+                listBird.add(new Bird(resources, screenHeight, screenWidth, this, man));
                 sum++;
             }
         }
@@ -52,12 +53,6 @@ public class BirdManager implements GameInterface, ObstacleCallback {
     }
 
     @Override
-    public void obstacleOffcreen(Bird bird) {
-        listBird.remove(bird);
-        callback.removeBird(bird);
-    }
-
-    @Override
     public void obstacleOffcreen(Bullet bullet) {
 
     }
@@ -67,8 +62,25 @@ public class BirdManager implements GameInterface, ObstacleCallback {
 
     }
 
+
+    @Override
+    public void obstacleOffcreen(Bird bird) {
+        listBird.remove(bird);
+        callback.removeBird(bird);
+    }
+
     @Override
     public void updatePosition(Bird bird, Rect position) {
         callback.updatePosition(bird, position);
+    }
+
+    @Override
+    public void updatePositionBulletBird(Bird bird, Rect position) {
+        callback.updateBulletBird(bird, position);
+    }
+
+    @Override
+    public void updatePosition(Bird bird, boolean crashShield) {
+        callback.updateShield(bird, crashShield);
     }
 }

@@ -51,11 +51,6 @@ public class BulletManager implements GameInterface, ObstacleCallback {
     }
 
     @Override
-    public void obstacleOffcreen(Bird bird) {
-
-    }
-
-    @Override
     public void obstacleOffcreen(Bullet bullet) {
         listBullet.remove(bullet);
         callback.removeBullet(bullet);
@@ -67,7 +62,22 @@ public class BulletManager implements GameInterface, ObstacleCallback {
     }
 
     @Override
+    public void obstacleOffcreen(Bird bird) {
+
+    }
+
+    @Override
     public void updatePosition(Bird bird, Rect position) {
+
+    }
+
+    @Override
+    public void updatePositionBulletBird(Bird bird, Rect position) {
+
+    }
+
+    @Override
+    public void updatePosition(Bird bird, boolean crashShield) {
 
     }
 

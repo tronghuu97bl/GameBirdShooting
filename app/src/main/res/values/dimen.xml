@@ -18,4 +18,9 @@
     <dimen name="plane_width">120dp</dimen>
     <dimen name="congra_height">500dp</dimen>
     <dimen name="congra_width">150dp</dimen>
+    <dimen name="pause_height">50dp</dimen>
+    <dimen name="pause_width">50dp</dimen>
+    <dimen name="resume_height">100dp</dimen>
+    <dimen name="resume_width">50dp</dimen>
+    <dimen name="resume_distance">15dp</dimen>
 </resources>

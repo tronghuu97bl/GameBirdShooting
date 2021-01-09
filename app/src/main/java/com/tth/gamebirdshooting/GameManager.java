@@ -2,6 +2,7 @@ package com.tth.gamebirdshooting;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
@@ -18,6 +19,7 @@ import com.tth.gamebirdshooting.Game.Bird;
 import com.tth.gamebirdshooting.Game.BirdManager;
 import com.tth.gamebirdshooting.Game.Bullet;
 import com.tth.gamebirdshooting.Game.BulletManager;
+import com.tth.gamebirdshooting.Game.Pause;
 import com.tth.gamebirdshooting.Game.Plane;
 import com.tth.gamebirdshooting.Game.Score;
 
@@ -25,6 +27,8 @@ import java.util.HashMap;
 
 public class GameManager extends SurfaceView implements SurfaceHolder.Callback, GameManagerCallback {
     private static final String APP_NAME = "Bird_Shooting";
+    private String man = "";
+    private SharedPreferences pre;
     private MainThread mainThread;
     private Context context;
     private DisplayMetrics dm;
@@ -34,6 +38,8 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
     private BirdManager birdManager;
     private HashMap<Bullet, Rect> positionBulletHashMap;
     private HashMap<Bird, Rect> positionBirdHashMap;
+    private HashMap<Bird, Rect> positionBirdBullet;
+    private HashMap<Bird, Boolean> shieldList;
     private Rect positionPlane;
     private int currentY, initX, score;
     private GameState gameState = GameState.INITIAL;
@@ -42,11 +48,13 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
     private Score scoreGame;
     private GameCongratulation congratulation;
     private MediaPlayer mpGameOver, mpGameCongra, mpGamePlay, mpShoot;
+    private Pause pause;
+    private int pressPause;
 
-    @Override
+/*    @Override
     protected int getWindowAttachCount() {
         return super.getWindowAttachCount();
-    }
+    }*/
 
     public GameManager(Context context, AttributeSet attributeSet) {
         super(context);
@@ -55,8 +63,11 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
         mainThread = new MainThread(this, getHolder());
         dm = new DisplayMetrics();
         ((Activity) context).getWindowManager().getDefaultDisplay().getMetrics(dm);
-        initGame();
+        pre = context.getSharedPreferences(APP_NAME, Context.MODE_PRIVATE);
+        man = pre.getString("choose", "");
+        initGame(man);
         initSound();
+
     }
 
     @Override
@@ -65,20 +76,24 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
         mainThread.start();
     }
 
-    public void initGame() {
+    public void initGame(String man) {
         score = 0;
         positionBulletHashMap = new HashMap<>();
         positionBirdHashMap = new HashMap<>();
+        shieldList = new HashMap<>();
+        positionBirdBullet = new HashMap<>();
         currentY = dm.heightPixels / 2;
         initX = dm.widthPixels / 20 + 320;
         plane = new Plane(getResources(), dm.heightPixels, dm.widthPixels, this);
         background = new Background(getResources(), dm.heightPixels, dm.widthPixels);
         bulletManager = new BulletManager(getResources(), dm.heightPixels, dm.widthPixels, initX, currentY, this);
-        birdManager = new BirdManager(getResources(), dm.heightPixels, dm.widthPixels, this);
+        birdManager = new BirdManager(getResources(), dm.heightPixels, dm.widthPixels, this, man);
         gameStart = new GameStart(getResources(), dm.heightPixels, dm.widthPixels);
         gameOver = new GameOver(getResources(), dm.heightPixels, dm.widthPixels);
         scoreGame = new Score(getResources(), dm.heightPixels, dm.widthPixels);
         congratulation = new GameCongratulation(getResources(), dm.heightPixels, dm.widthPixels);
+        pause = new Pause(getResources(), dm.heightPixels, dm.widthPixels, this);
+
     }
 
     public void initSound() {
@@ -115,6 +130,10 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
                 bulletManager.updateCurrentY(currentY);
                 bulletManager.update();
                 birdManager.update();
+                pause.update();
+                break;
+            case GAME_PAUSE:
+                pause.update();
                 break;
         }
     }
@@ -135,7 +154,16 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
                     bulletManager.draw(canvas);
                     birdManager.draw(canvas);
                     scoreGame.draw(canvas);
+                    pause.draw(canvas);
                     calculation();
+                    break;
+                case GAME_PAUSE:
+                    background.draw(canvas);
+                    plane.draw(canvas);
+                    bulletManager.draw(canvas);
+                    birdManager.draw(canvas);
+                    scoreGame.draw(canvas);
+                    pause.draw(canvas);
                     break;
                 case GAME_OVER:
                     background.draw(canvas);
@@ -151,8 +179,6 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
                     break;
             }
         }
-
-
     }
 
     public void calculation() {
@@ -166,34 +192,47 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
         }
         for (Bird bird : positionBirdHashMap.keySet()) {
             Rect psBird = positionBirdHashMap.get(bird);
+            Rect psBulletBird = positionBirdBullet.get(bird);
+            boolean shield = false;
+            if (man.equals("man3") || man.equals("man4")) {
+                shield = shieldList.get(bird);
+            }
+            if (man.equals("man5")) {
+                if (psBulletBird.intersect(positionPlane)) {
+                    gameState = GameState.GAME_OVER;
+                    scoreGame.saveScoreToPre(getContext().getSharedPreferences(APP_NAME, Context.MODE_PRIVATE));
+                    mpGamePlay.stop();
+                    mpGameOver.start();
+                    break;
+                }
+            }
             for (Bullet bullet : positionBulletHashMap.keySet()) {
                 Rect psBullet = positionBulletHashMap.get(bullet);
-                //check game over
-                if (psBird.left < positionPlane.right && psBird.top > positionPlane.top - 50 && psBird.top < positionPlane.bottom - 50) {
+                //2 vien dan va cham
+                if (man.equals("man5")) {
+                    if (psBullet.intersect(psBulletBird)) {
+                        bullet.collision(true);
+                        bird.updateBullet(true);
+                    }
+                }
+
+                //check game over (va cham giua plane and bird
+                if (psBird.intersect(positionPlane)) {
                     gameState = GameState.GAME_OVER;
                     scoreGame.saveScoreToPre(getContext().getSharedPreferences(APP_NAME, Context.MODE_PRIVATE));
                     mpGamePlay.stop();
                     mpGameOver.start();
                     break;
                 }
-                if (psBird.left < positionPlane.right && psBird.bottom < positionPlane.top && psBird.bottom > positionPlane.bottom) {
-                    gameState = GameState.GAME_OVER;
-                    scoreGame.saveScoreToPre(getContext().getSharedPreferences(APP_NAME, Context.MODE_PRIVATE));
-                    mpGamePlay.stop();
-                    mpGameOver.start();
-                    break;
-                }
-                //check va cham
-                if (psBullet.right > psBird.left && psBullet.bottom < psBird.bottom && psBullet.bottom > psBird.top && psBullet.left < psBird.left) {
-                    score++;
-                    plane.updateScore(score);
-                    scoreGame.updateScore(score);
-                    bullet.collision(true);
-                    bird.collision(true);
-                    out = true;
-                    break;
-                }
-                if (psBullet.right > psBird.left && psBullet.top < psBird.bottom && psBullet.top > psBird.top && psBullet.left < psBird.left) {
+                //check va cham giua vien dan va con chim
+                if (psBird.intersect(psBullet)) {
+                    if (man.equals("man3") || man.equals("man4")) {
+                        if (!shield) {
+                            bird.setShield(true);
+                            bullet.collision(true);
+                            break;
+                        }
+                    }
                     score++;
                     plane.updateScore(score);
                     scoreGame.updateScore(score);
@@ -225,10 +264,14 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
             case PLAYING:
                 float dis = event.getY();
                 plane.onTouchEvent(dis);
+                pause.getOnTouch(event.getX(), event.getY());
+                break;
+            case GAME_PAUSE:
+                pause.getOnTouch(event.getX(), event.getY());
                 break;
             case GAME_OVER:
             case GAME_WIN:
-                initGame();
+                initGame(man);
                 gameState = GameState.INITIAL;
                 break;
         }
@@ -259,6 +302,22 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
     }
 
     @Override
+    public void updateShield(Bird bird, boolean crashShield) {
+        if (shieldList.containsKey(bird)) {
+            shieldList.remove(bird);
+        }
+        shieldList.put(bird, crashShield);
+    }
+
+    @Override
+    public void updateBulletBird(Bird bird, Rect bulletPosition) {
+        if (positionBirdBullet.containsKey(bird)) {
+            positionBirdBullet.remove(bird);
+        }
+        positionBirdBullet.put(bird, bulletPosition);
+    }
+
+    @Override
     public void removeBullet(Bullet bullet) {
         positionBulletHashMap.remove(bullet);
     }
@@ -266,5 +325,23 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
     @Override
     public void removeBird(Bird bird) {
         positionBirdHashMap.remove(bird);
+    }
+
+    @Override
+    public void pressPause(int press) {
+        this.pressPause = press;
+        if (pressPause == 0) {
+            gameState = GameState.GAME_PAUSE;
+        }
+        if (pressPause == 1) {
+            gameState = GameState.PLAYING;
+        }
+        if (pressPause == 2) {
+            initGame(man);
+            gameState = GameState.INITIAL;
+        }
+        if (pressPause == 3) {
+            ((Activity) context).finish();
+        }
     }
 }
