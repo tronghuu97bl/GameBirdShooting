@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -50,7 +51,6 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
     private MediaPlayer mpGameOver, mpGameCongra, mpGamePlay, mpShoot;
     private Pause pause;
     private int pressPause;
-
 /*    @Override
     protected int getWindowAttachCount() {
         return super.getWindowAttachCount();
@@ -172,14 +172,17 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
                     birdManager.draw(canvas);
                     gameOver.draw(canvas);
                     scoreGame.draw(canvas);
+
                     break;
                 case GAME_WIN:
                     background.draw(canvas);
                     congratulation.draw(canvas);
+
                     break;
             }
         }
     }
+
 
     public void calculation() {
         boolean out = false;
@@ -188,6 +191,7 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
             scoreGame.saveScoreToPre(getContext().getSharedPreferences(APP_NAME, Context.MODE_PRIVATE));
             mpGamePlay.stop();
             mpGameCongra.start();
+
             return;
         }
         for (Bird bird : positionBirdHashMap.keySet()) {
@@ -200,7 +204,7 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
             if (man.equals("man5")) {
                 if (psBulletBird.intersect(positionPlane)) {
                     gameState = GameState.GAME_OVER;
-                    scoreGame.saveScoreToPre(getContext().getSharedPreferences(APP_NAME, Context.MODE_PRIVATE));
+                   scoreGame.saveScoreToPre(getContext().getSharedPreferences(APP_NAME, Context.MODE_PRIVATE));
                     mpGamePlay.stop();
                     mpGameOver.start();
                     break;
@@ -219,7 +223,7 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
                 //check game over (va cham giua plane and bird
                 if (psBird.intersect(positionPlane)) {
                     gameState = GameState.GAME_OVER;
-                    scoreGame.saveScoreToPre(getContext().getSharedPreferences(APP_NAME, Context.MODE_PRIVATE));
+                   scoreGame.saveScoreToPre(getContext().getSharedPreferences(APP_NAME, Context.MODE_PRIVATE));
                     mpGamePlay.stop();
                     mpGameOver.start();
                     break;
@@ -245,7 +249,7 @@ public class GameManager extends SurfaceView implements SurfaceHolder.Callback, 
             if (out) break;
             if (psBird.left < 0) {
                 gameState = GameState.GAME_OVER;
-                scoreGame.saveScoreToPre(getContext().getSharedPreferences(APP_NAME, Context.MODE_PRIVATE));
+               scoreGame.saveScoreToPre(getContext().getSharedPreferences(APP_NAME, Context.MODE_PRIVATE));
                 mpGamePlay.stop();
                 mpGameOver.start();
                 break;

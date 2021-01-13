@@ -3,28 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+
     android:layout_height="match_parent"
-    android:background="@drawable/background"
+    android:background="@drawable/high_score"
     tools:context=".HighScoreActivity">
 
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+
         android:layout_centerInParent="true">
 
-        <TextView
-            android:id="@+id/tv_top"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="TOP 6"
-            android:textColor="@color/orange"
-            android:textSize="50sp" />
 
         <TextView
             android:id="@+id/tv_top1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/tv_top"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             android:text="top 1"
